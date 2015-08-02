@@ -247,6 +247,161 @@ class Livebox:
       return func(*args, **kwargs)
     return check_action
 
+# LIVEBOX API
+  @action
+  @require_auth
+  def LB_reboot(self):
+    """Reboot the livebox"""
+    return self._sysbus('NMC:reboot', auth=True)
+  
+  @require_auth
+  def LB_DeviceInfo(self):
+    """Get information about Livebox"""
+    return self._sysbus('DeviceInfo', param=None, auth=True, method='GET')
+
+# WAN API
+  def LB_getWANStatus(self):
+    """Retrieve info about WAN connection status"""
+    return self._sysbus('NMC:getWANStatus')
+    
+# WIFI API
+  def LB_WifiGet(self):
+    """Return the Wifi status"""
+    return self._sysbus('NMC/Wifi:get')
+  
+  @action
+  @require_auth
+  def LB_Wifiset(self, enable):
+    """Return the Wifi status"""
+    if not isinstance(enable, bool):
+      return "ERROR"
+    p = '{"parameters":{"Enable":' + str(enable).lower() + ',"Status":' + str(enable).lower() + '}}'
+    return self._sysbus('NMC/Wifi:set', p, auth=True)
+
+# LAN API
+  @require_auth
+  def LB_getLANIP(self):
+    """Retrieve the IP informations of the internal LAN"""
+    return self._sysbus('NMC:getLANIP', auth=True)
+
+  @require_auth
+  def LB_getStaticLeases(self):
+    """Get the list of IPv4 DHCP static leases"""
+    return self._sysbus('DHCPv4/Server/Pool/default:getStaticLeases', auth=True)
+    
+  @require_auth
+  def LB_Firewall_getPortForwarding(self):
+    """Get the list of forwarded port"""
+    return self._sysbus('Firewall:getPortForwarding', auth=True)
+
+  @require_auth
+  def LB_Firewall_getPinhole(self):
+    """Unknown command"""
+    return self._sysbus('Firewall:getPinhole', auth=True)
+
+# PHONE API
+  def LB_listTrunks(self):
+    """Return Informations about IP Phone system"""
+    return self._sysbus('VoiceService/VoiceApplication:listTrunks')
+  
+  @require_auth
+  def LB_listHandsets(self):
+    """Return Informations about IP Phone devices"""
+    return self._sysbus('VoiceService/VoiceApplication:listHandsets', auth=True)
+
+  @require_auth
+  def LB_getVoIPConfig(self):
+    """Get the current VoIP configuration"""
+    return self._sysbus('NMC:getVoIPConfig', auth=True)
+
+  @action
+  @require_auth
+  def LB_ring(self):
+    """Make a ring test on phone line device"""
+    return self._sysbus('VoiceService/VoiceApplication:ring', auth=True)
+
+  @require_auth
+  def LB_DECT_getPin(self):
+    """Return the DECT pairing pin code"""
+    return self._sysbus('DECT:getPIN', auth=True)
+    
+  @require_auth
+  def LB_DECT_getVersion(self):
+    """Return the DECT base station version"""
+    return self._sysbus('DECT:getVersion', auth=True)
+
+  @require_auth
+  def LB_DECT_getStandardVersion(self):
+    """Return the DECT cat-iq version"""
+    return self._sysbus('DECT:getStandardVersion', auth=True)
+  
+  @require_auth
+  def LB_DECT_getRFPI(self):
+    """Return the DECT RFPI"""
+    return self._sysbus('DECT:getRFPI', auth=True)
+
+# TV API
+  def LB_getIPTVStatus(self):
+    """Retrieve the status of IP Television"""
+    return self._sysbus('NMC/OrangeTV:getIPTVStatus')
+    
+  @require_auth
+  def LB_getIPTVConfig(self):
+    """Retrieve the configuration of IP Television"""
+    return self._sysbus('NMC/OrangeTV:getIPTVConfig', auth=True)
+
+# MAIN API
+  @require_auth
+  def LB_getUsers(self):
+    """Return the list of system users"""
+    return self._sysbus('UserManagement:getUsers', auth=True)
+
+  @require_auth
+  def LB_LED(self):
+    """Return the status of physical LED"""
+    return self._sysbus('LED', param=None, auth=True, method='GET')
+
+  def LB_DevicesGet(self, expr=None, filter=False, by_connected=True):
+    """List all available device
+
+    You can filter by turn filter param to True, and choose to show only
+    connected device (by default) or only not connected device
+    @param[in] expr OPTIONNAL : the filter expression
+    @param[in] filter OPTIONNAL : enable of not the filter
+    @param[in] by_connected OPTIONNAL : choose to filter by connected device
+    """
+    filter_connected = '{"parameters":{"expression":{"usbM2M":" usb && wmbus and .Active==true and .Master==\\"\\" ","usb":" printer && physical and .Active==true and .Master==\\"\\" ","usblogical":"volume && logical and .Active==true and .Master==\\"\\" ","wifi":"wifi && (edev || hnid) and !homeplug_av and !homeplug_devolo and .Active==true and .Master==\\"\\" ","eth":"eth && (edev || hnid) and !homeplug_av and !homeplug_devolo and .Active==true  and .Master==\\"\\" ","dect":"voice && dect && handset && physical and .Active==true  and .Master==\\"\\"  "}}}'
+    filter_not_connected = '{"parameters":{"expression":".Active==false","traverse":"down","flags":""}}'
+    if expr:
+      return self._sysbus('Devices:get', expr)
+    elif filter:
+      if by_connected:
+        p = filter_connected
+      else:
+        p = filter_not_connected
+      return self._sysbus('Devices:get', p)
+    else:
+      return self._sysbus('Devices:get')
+      
+  def LB_DevicesGet_DECT(self):
+    """Get the list of DECT paired device"""
+    exp = '{"parameters":{"expression":{"dect":"voice && dect && handset && physical"}}}'
+    return self.LB_DevicesGet(exp)
+
+  @require_auth
+  def LB_lanGetMIBs(self):
+    """Extract LAN information from MIB database"""
+    return self._sysbus('NeMo/Intf/lan:getMIBs', auth=True)
+    
+  @require_auth
+  def LB_dataGetMIBs(self):
+    """Extract general information from MIB database"""
+    return self._sysbus('NeMo/Intf/data:getMIBs', auth=True)
+
+  @require_auth
+  def LB_dataGetMIBs(self):
+    """List connected USB devices"""
+    return self._sysbus('USBHosts:getDevices', auth=True)
 
 
 def print_r(content, align=''):
@@ -268,14 +423,8 @@ def print_r(content, align=''):
       print(align + value)
 
 
-
-
 if __name__ == '__main__':
   lb = Livebox()
   lb.login()
 
   lb.logout()
-  
-  
-  
-  

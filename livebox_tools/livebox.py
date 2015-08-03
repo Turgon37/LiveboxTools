@@ -3,7 +3,7 @@
 
 # This file is a part of Livebox_tools
 #
-# Copyright (c) 2015 Pierre GINDRAUD
+# Copyright (c) 2015 fccagou, Pierre GINDRAUD
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
